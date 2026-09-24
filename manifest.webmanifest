@@ -1,0 +1,18 @@
+{
+  "name": "Anniv — rappels d'anniversaires",
+  "short_name": "Anniv",
+  "description": "Notez les anniversaires de vos proches et recevez des rappels.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf7f4",
+  "theme_color": "#e8505b",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Ajouter un anniversaire", "url": "./#home" },
+    { "name": "Calendrier", "url": "./#calendar" }
+  ]
+}

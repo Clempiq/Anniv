@@ -1,0 +1,12 @@
+{
+  "name": "anniv",
+  "version": "1.0.0",
+  "description": "Application de rappels d'anniversaires (PWA, hors ligne, sans serveur)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "npx --yes serve -l 8080 ."
+  },
+  "license": "MIT"
+}
