@@ -1,60 +1,71 @@
-# 🎂 Anniv — rappels d'anniversaires
+# 🎂 Anniv
 
-Petite application web (PWA) pour noter les anniversaires de ses proches et ne plus jamais les oublier.
-Aucun serveur, aucun compte : tout reste sur votre appareil, et l'app fonctionne hors ligne.
+Application Android (React Native + Expo) pour noter les anniversaires de ses proches, recevoir des rappels
+**et ne plus jamais oublier d'acheter le cadeau**. Tout reste sur le téléphone : pas de compte, pas de serveur.
+
+## Télécharger l'APK
+
+Chaque push déclenche le workflow **Android APK** (onglet *Actions*), qui compile l'application et publie
+une pré-version dans l'onglet **Releases** du dépôt avec le fichier `anniv-…apk` en pièce jointe.
+
+Sur le téléphone : ouvrir la page de la release, télécharger l'APK, l'ouvrir et accepter l'installation
+depuis le navigateur si Android le demande. Au premier lancement, aller dans **Réglages → Activer les notifications**.
 
 ## Fonctionnalités
 
-- **Liste « À venir »** triée par proximité, avec compte à rebours, âge atteint, séparateurs par mois,
-  recherche, filtre par groupe (Famille, Amis, Travail… ou vos propres groupes) et plusieurs tris.
-- **Bannière du jour** avec confettis quand c'est l'anniversaire de quelqu'un 🎉
-- **Rappels** configurables (le jour J, la veille, 2/3 jours, 1/2 semaines, 1 mois avant),
-  globalement ou par personne :
-  - notifications du navigateur (et en arrière-plan sur Chrome Android quand l'app est installée) ;
-  - **export iCalendar (.ics)** avec alarmes, pour des rappels garantis dans Google Agenda, Apple Calendrier ou Outlook.
-- **Calendrier** mensuel.
-- **Fiche détaillée** : âge, signe astrologique, signe chinois, jour de naissance, nombre de jours vécus,
-  notes, **idées cadeaux** (liste à cocher), suivi « j'ai souhaité l'anniversaire » avec historique.
-- **Messages de vœux** générés (chaleureux, drôle, pro, âge rond) à copier, partager, ou envoyer
-  directement par SMS, WhatsApp ou e-mail.
-- **Âges ronds** mis en avant (18, 20, 25, 30, 40, 50…).
-- **Statistiques** : répartition par mois, par groupe, par signe, âge moyen, plus jeune / doyen.
-- **Import / export** : sauvegarde JSON, CSV (`nom;JJ/MM/AAAA;groupe;notes`), import de contacts vCard (.vcf).
-- Gestion du **29 février** (fêté le 28 les années non bissextiles).
-- Thème clair / sombre / automatique, installable sur l'écran d'accueil, raccourcis clavier
-  (`n` = nouvel anniversaire, `/` = rechercher), annulation après suppression.
+- **À venir** : anniversaires triés par proximité, âge atteint, recherche, filtres par groupe, tri par nom ou âge,
+  bannière le jour J.
+- **Notifications** (même app fermée, reprogrammées après un redémarrage du téléphone) :
+  - rappels d'anniversaire configurables (le jour J, la veille, 2/3 jours, 1/2 semaines, 1 mois avant),
+    globalement ou personne par personne ;
+  - **rappels pour acheter le cadeau** (par défaut 2 semaines et 3 jours avant) avec les idées et le budget,
+    et deux boutons directement dans la notification : **« Cadeau acheté »** et **« Rappeler demain »** ;
+  - heure d'envoi au choix ; boutons de test.
+- **Cadeaux** : liste des cadeaux à acheter sur 30/60/90 jours ou 1 an, budget total, bouton « Acheté ».
+- **Fiche** : âge, signe astrologique et chinois, jour de naissance, jours vécus, notes, idées cadeaux à cocher,
+  budget, suivi « j'ai souhaité l'anniversaire » avec historique.
+- **Messages de vœux** (chaleureux, drôle, pro, âge rond) à copier, partager, ou envoyer par SMS, WhatsApp, e-mail.
+- **Calendrier** mensuel et **statistiques** (par mois, groupe, signe, âges ronds à venir, budget du mois).
+- **Import des anniversaires depuis les contacts** du téléphone, import/export CSV, sauvegarde/restauration JSON.
+- Gestion du 29 février, thème clair/sombre/automatique.
 
-## Lancer en local
+## Développement
 
 ```bash
-npm start          # sert le dossier sur http://localhost:8080
-# ou : python3 -m http.server 8080
+npm install
+npm test            # tests de la logique (dates, rappels, imports)
+npm run typecheck   # vérification TypeScript
+npx expo run:android   # lancer sur un téléphone/émulateur (Android SDK requis)
 ```
 
-Aucune dépendance, aucune étape de build : ce sont des fichiers statiques.
-
-## Tests
-
-```bash
-npm test
-```
-
-Les tests couvrent la logique métier (`js/lib.js`) : calcul des dates et des âges, 29 février,
-zodiaques, rappels, imports CSV/vCard, export ICS.
-
-## Mise en ligne (GitHub Pages)
-
-Dans *Settings → Pages* du dépôt, choisir « Deploy from a branch », la branche voulue et le dossier `/ (root)`.
-L'app sera accessible sur `https://<utilisateur>.github.io/<dépôt>/` et installable sur téléphone.
-
-## Structure
+L'app utilise des modules natifs (notifications, contacts, tâches de fond) : elle ne fonctionne pas dans Expo Go,
+il faut un build de développement (`npx expo run:android`) ou l'APK.
 
 ```
-index.html              interface
-css/style.css           styles (clair/sombre, responsive)
-js/lib.js               logique pure (dates, rappels, import/export) — testée
-js/app.js               interface et interactions
-sw.js                   service worker (hors ligne + rappels en arrière-plan)
-manifest.webmanifest    manifeste PWA
-tests/lib.test.js       tests (node:test)
+src/app/                 écrans (Expo Router)
+  (tabs)/                À venir, Calendrier, Cadeaux, Stats, Réglages
+  person/[id].tsx        fiche d'une personne
+  edit.tsx               ajout / modification
+  import-contacts.tsx    import depuis les contacts
+src/lib/birthdays.ts     logique pure : dates, âges, signes, vœux, CSV
+src/lib/planner.ts       calcul des notifications à programmer
+src/lib/notifications.ts programmation (expo-notifications), canaux et boutons d'action
+src/lib/background.ts    tâche de fond qui reprogramme les rappels
+src/lib/store.tsx        état de l'app + sauvegarde (AsyncStorage)
+tests/                   tests (node:test)
 ```
+
+## Publier sur le Play Store
+
+L'APK des releases est signé avec une clé de debug : parfait pour tester, mais le Play Store exige un
+**Android App Bundle (.aab)** signé avec une clé de production. Le plus simple est EAS (service d'Expo), déjà configuré
+dans `eas.json` :
+
+1. Créer un compte Expo, puis `npx eas-cli@latest login` et `npx eas-cli@latest init`.
+2. `npx eas-cli@latest build --platform android --profile production` : EAS génère et conserve la clé de signature,
+   et produit le `.aab`.
+3. Créer l'application dans la [Google Play Console](https://play.google.com/console) (compte développeur : 25 $ une fois),
+   remplir la fiche (description, captures, politique de confidentialité — l'app ne collecte aucune donnée),
+   puis `npx eas-cli@latest submit --platform android` (piste de test interne).
+
+Identifiant de l'application : `com.clempiq.anniv` (définitif une fois publiée ; à changer dans `app.json` avant si besoin).
