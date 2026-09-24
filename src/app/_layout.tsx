@@ -29,6 +29,7 @@ import {
 } from '../lib/notifications';
 import { onDataChange, StoreProvider, useStore } from '../lib/store';
 import { FONTS, useTheme } from '../theme';
+import { refreshWidget } from '../widget/handler';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -106,6 +107,7 @@ function BackgroundServices() {
 
   useEffect(() => onDataChange((d) => {
     autoBackup(d);
+    refreshWidget(d);
     if (d.settings.calendarSync) {
       if (calTimer.current) clearTimeout(calTimer.current);
       calTimer.current = setTimeout(() => syncPhoneCalendar(d.people).catch(() => {}), 4000);

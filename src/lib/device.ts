@@ -55,10 +55,17 @@ export function listBackups(): BackupInfo[] {
   if (Platform.OS === 'web') return [];
   try {
     return backupsDir().list()
-      .filter((f): f is File => f instanceof File && f.name.endsWith('.json'))
-      .map((f) => {
+      .filter((f) => f.name.endsWith('.json'))
+      .map((entry) => {
+        const f = new File(entry.uri);
         const m = f.name.match(/(\d{4})-(\d{2})-(\d{2})/);
-        return { name: f.name, uri: f.uri, size: f.size ?? 0, date: m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(0) };
+        let size = 0;
+        try {
+          size = f.size ?? 0;
+        } catch {
+          // taille inconnue
+        }
+        return { name: f.name, uri: f.uri, size, date: m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(0) };
       })
       .sort((a, b) => b.date.getTime() - a.date.getTime());
   } catch {

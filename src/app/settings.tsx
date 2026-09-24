@@ -21,6 +21,8 @@ import type { AccentName } from '../lib/planner';
 import { normalizeData } from '../lib/storage';
 import { useStore } from '../lib/store';
 import { ACCENTS, useTheme } from '../theme';
+import { WIDGET_NAME } from '../widget/handler';
+import { requestPinWidget } from 'react-native-android-widget';
 
 const HOURS = [7, 8, 9, 10, 12, 14, 18, 20];
 
@@ -181,6 +183,9 @@ export default function SettingsScreen() {
         <ToggleRow icon="finger-print" title="Verrouiller l’app" subtitle="Empreinte, visage ou code du téléphone" value={settings.lock} onValueChange={setLock} />
         {Platform.OS !== 'web' && (
           <ToggleRow icon="calendar" color="#1E7BFF" title="Agenda du téléphone" subtitle="Un agenda « Anniv » tenu à jour automatiquement" value={settings.calendarSync} onValueChange={setCalendar} />
+        )}
+        {Platform.OS === 'android' && (
+          <ListRow icon="apps" color="#FF8A5B" title="Ajouter le widget" subtitle="Les prochains anniversaires sur ton écran d’accueil" onPress={() => requestPinWidget({ widgetName: WIDGET_NAME }).then((ok) => { if (!ok) toast('Appui long sur l’écran d’accueil → Widgets → Anniv'); }).catch(() => toast('Appui long sur l’écran d’accueil → Widgets → Anniv'))} />
         )}
         <ListRow icon="calendar-number" color="#0FA37F" title="Exporter en .ics" subtitle="Pour Google Agenda, Outlook…" onPress={() => shareFile('anniv.ics', toICS(people), 'text/calendar').catch(() => toast('Export impossible'))} />
       </Card>
