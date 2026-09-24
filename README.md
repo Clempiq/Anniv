@@ -13,21 +13,33 @@ depuis le navigateur si Android le demande. Au premier lancement, aller dans **R
 
 ## Fonctionnalités
 
-- **À venir** : anniversaires triés par proximité, âge atteint, recherche, filtres par groupe, tri par nom ou âge,
-  bannière le jour J.
-- **Notifications** (même app fermée, reprogrammées après un redémarrage du téléphone) :
-  - rappels d'anniversaire configurables (le jour J, la veille, 2/3 jours, 1/2 semaines, 1 mois avant),
-    globalement ou personne par personne ;
-  - **rappels pour acheter le cadeau** (par défaut 2 semaines et 3 jours avant) avec les idées et le budget,
-    et deux boutons directement dans la notification : **« Cadeau acheté »** et **« Rappeler demain »** ;
-  - heure d'envoi au choix ; boutons de test.
-- **Cadeaux** : liste des cadeaux à acheter sur 30/60/90 jours ou 1 an, budget total, bouton « Acheté ».
-- **Fiche** : âge, signe astrologique et chinois, jour de naissance, jours vécus, notes, idées cadeaux à cocher,
-  budget, suivi « j'ai souhaité l'anniversaire » avec historique.
-- **Messages de vœux** (chaleureux, drôle, pro, âge rond) à copier, partager, ou envoyer par SMS, WhatsApp, e-mail.
-- **Calendrier** mensuel et **statistiques** (par mois, groupe, signe, âges ronds à venir, budget du mois).
-- **Import des anniversaires depuis les contacts** du téléphone, import/export CSV, sauvegarde/restauration JSON.
-- Gestion du 29 février, thème clair/sombre/automatique.
+**Tableau de bord** — salutation, grand compte à rebours vers le prochain événement (anneau animé, dégradé propre
+à chaque personne), confettis le jour J, « Il n’est pas trop tard » pour les oublis récents, la semaine en cartes,
+cadeaux à préparer, moments spéciaux (fêtes des prénoms, fête des mères/pères/grands-parents, 10 000e jour…).
+
+**Tous les événements** — anniversaires, anniversaires de mariage (avec le nom des noces : coton, étain, or…),
+de couple, souvenirs (ton adapté, sans cadeau), événements libres. Photo ou emoji, lien (Maman, collègue…),
+groupe, favoris, centres d’intérêt, fête du prénom détectée automatiquement, saisie éclair
+(« Julie Martin 12 mars 1990 famille »).
+
+**Notifications** (même app fermée, reprogrammées au redémarrage et par une tâche de fond) :
+rappels J-x configurables, rappels cadeau avec boutons « Cadeau acheté » / « Rappeler demain »,
+bouton « C’est fait » sur les rappels d’anniversaire, relance à 20 h si pas encore souhaité, récap du dimanche,
+fêtes des prénoms, fêtes des mères/pères/grands-parents, jalons insolites, et ton propre anniversaire.
+
+**Cadeaux** — idées avec prix et lien, suivi idée → acheté → emballé → offert, budget par personne,
+suggestions hors ligne selon les centres d’intérêt, l’âge et le budget, historique « déjà offert ».
+
+**Messages & cartes** — vœux par ton (chaleureux, drôle, poétique, court, pro, romantique, enfant, âge rond,
+en retard), envoi direct par WhatsApp, SMS, e-mail ; cartes de vœux illustrées (8 thèmes, photo possible)
+partagées en image.
+
+**Agenda** — liste (filtres, tris, actions rapides à l’appui long), calendrier mensuel, vue annuelle, recherche plein texte.
+
+**Moi** — bilan de l’année, série de vœux, 13 badges, statistiques.
+
+**Réglages** — thème clair/sombre, 5 couleurs d’accent, verrou par empreinte/visage, synchronisation avec
+l’agenda du téléphone, export .ics / CSV / JSON, sauvegardes automatiques hebdomadaires avec restauration.
 
 ## Développement
 
@@ -43,12 +55,19 @@ il faut un build de développement (`npx expo run:android`) ou l'APK.
 
 ```
 src/app/                 écrans (Expo Router)
-  (tabs)/                À venir, Calendrier, Cadeaux, Stats, Réglages
-  person/[id].tsx        fiche d'une personne
-  edit.tsx               ajout / modification
-  import-contacts.tsx    import depuis les contacts
-src/lib/birthdays.ts     logique pure : dates, âges, signes, vœux, CSV
+  (tabs)/                Accueil, Agenda, Cadeaux, Moi (+ barre d'onglets flottante)
+  person/[id].tsx        fiche (cadeaux, message, profil)
+  card/[id].tsx          carte de vœux partageable
+  edit.tsx, onboarding.tsx, settings.tsx, search.tsx, import-contacts.tsx
+src/components/          design system (ui, Sheet, Confetti, TabBar, toast)
+src/lib/birthdays.ts     logique pure : modèle, dates, âges, signes, CSV, ICS
+src/lib/calendarfr.ts    fêtes des prénoms, Pâques, fêtes des mères/pères, noces
+src/lib/wishes.ts        messages de vœux
+src/lib/gifts.ts         suggestions de cadeaux
+src/lib/insights.ts      oublis, jalons, série, badges, bilan
+src/lib/quickadd.ts      saisie éclair
 src/lib/planner.ts       calcul des notifications à programmer
+src/lib/device.ts        photos, sauvegardes, agenda, verrou, envoi de messages
 src/lib/notifications.ts programmation (expo-notifications), canaux et boutons d'action
 src/lib/background.ts    tâche de fond qui reprogramme les rappels
 src/lib/store.tsx        état de l'app + sauvegarde (AsyncStorage)

@@ -3,14 +3,14 @@
     "name": "Anniv",
     "slug": "anniv",
     "scheme": "anniv",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#E8505B"
+      "backgroundColor": "#FF4D6D"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,24 +18,29 @@
     },
     "android": {
       "package": "com.clempiq.anniv",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
-        "backgroundColor": "#E8505B",
+        "backgroundColor": "#FF4D6D",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundImage": "./assets/android-icon-background.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.READ_CONTACTS",
-        "android.permission.RECEIVE_BOOT_COMPLETED"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.VIBRATE"
       ],
       "blockedPermissions": [
         "android.permission.WRITE_CONTACTS",
         "android.permission.RECORD_AUDIO",
         "android.permission.SYSTEM_ALERT_WINDOW",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA"
       ]
     },
     "plugins": [
@@ -45,13 +50,48 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#E8505B"
+          "color": "#FF4D6D"
         }
       ],
       [
         "expo-contacts",
         {
           "contactsPermission": "Anniv lit les dates d'anniversaire de vos contacts pour les importer."
+        }
+      ],
+      "expo-font",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#FF4D6D",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#1A1024"
+          }
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Anniv ajoute vos anniversaires dans un agenda dédié."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Anniv utilise Face ID pour protéger vos données."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Anniv utilise vos photos pour illustrer les fiches.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ]
     ]

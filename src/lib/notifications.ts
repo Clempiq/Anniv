@@ -1,26 +1,38 @@
-// Programmation des notifications locales : elles sont envoyées par Android même app fermée.
+// Programmation des notifications locales : envoyées par le système même app fermée.
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import { planNotifications, type Settings } from './planner';
 import type { Person } from './birthdays';
+import { planNotifications, type NotificationKind, type Settings } from './planner';
 
 export const CHANNEL_BIRTHDAYS = 'anniversaires';
 export const CHANNEL_GIFTS = 'cadeaux';
+export const CHANNEL_RECAP = 'recap';
 export const CATEGORY_GIFT = 'gift';
 export const CATEGORY_BIRTHDAY = 'birthday';
+export const CATEGORY_INFO = 'info';
 export const ACTION_BOUGHT = 'bought';
 export const ACTION_SNOOZE = 'snooze';
 export const ACTION_WISH = 'wish';
+export const ACTION_WISHED = 'wished';
 
-export type NotificationData = { personId: string; kind: 'birthday' | 'gift' | 'test' };
+export type NotificationData = { personId: string; kind: NotificationKind | 'test' };
 
-let configured = false;
+/** Android accepte jusqu'à 500 alarmes par app, iOS 64 notifications en attente. */
+const MAX = Platform.OS === 'android' ? 150 : 60;
+
+let configured: Promise<void> | null = null;
 
 /** Canaux Android et boutons d'action. À appeler au démarrage (idempotent). */
-export async function configureNotifications(): Promise<void> {
-  if (configured) return;
-  configured = true;
+export function configureNotifications(): Promise<void> {
+  if (!configured) configured = doConfigure().catch((e) => {
+    configured = null;
+    throw e;
+  });
+  return configured;
+}
+
+async function doConfigure() {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
@@ -31,17 +43,22 @@ export async function configureNotifications(): Promise<void> {
   });
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_BIRTHDAYS, {
-      name: 'Anniversaires',
-      description: 'Rappels avant et le jour des anniversaires',
+      name: 'Anniversaires et fêtes',
+      description: 'Rappels avant et le jour des anniversaires, fêtes et événements',
       importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 200, 120, 200],
-      lightColor: '#E8505B',
+      vibrationPattern: [0, 180, 120, 180],
+      lightColor: '#FF4D6D',
     });
     await Notifications.setNotificationChannelAsync(CHANNEL_GIFTS, {
       name: 'Cadeaux à acheter',
       description: 'Rappels pour acheter un cadeau à temps',
       importance: Notifications.AndroidImportance.HIGH,
-      lightColor: '#F2A93B',
+      lightColor: '#FF8A5B',
+    });
+    await Notifications.setNotificationChannelAsync(CHANNEL_RECAP, {
+      name: 'Récap de la semaine',
+      description: 'Le dimanche soir, ce qui t’attend dans la semaine',
+      importance: Notifications.AndroidImportance.DEFAULT,
     });
   }
   await Notifications.setNotificationCategoryAsync(CATEGORY_GIFT, [
@@ -50,6 +67,7 @@ export async function configureNotifications(): Promise<void> {
   ]);
   await Notifications.setNotificationCategoryAsync(CATEGORY_BIRTHDAY, [
     { identifier: ACTION_WISH, buttonTitle: '💌 Écrire un message', options: { opensAppToForeground: true } },
+    { identifier: ACTION_WISHED, buttonTitle: '✅ C’est fait', options: { opensAppToForeground: true } },
   ]);
 }
 
@@ -66,15 +84,27 @@ export async function requestPermission(): Promise<boolean> {
   return res.granted;
 }
 
+function channelFor(kind: NotificationKind): string {
+  if (kind === 'gift') return CHANNEL_GIFTS;
+  if (kind === 'weekly') return CHANNEL_RECAP;
+  return CHANNEL_BIRTHDAYS;
+}
+
+function categoryFor(kind: NotificationKind): string | undefined {
+  if (kind === 'gift') return CATEGORY_GIFT;
+  if (kind === 'birthday' || kind === 'nudge') return CATEGORY_BIRTHDAY;
+  return undefined;
+}
+
 let syncing: Promise<number> | null = null;
 let pending: { people: Person[]; settings: Settings } | null = null;
 
 /**
  * Annule puis reprogramme toutes les notifications à partir des données.
- * Les appels rapprochés sont regroupés pour éviter les courses.
- * Renvoie le nombre de notifications programmées.
+ * Les appels rapprochés sont regroupés. Renvoie le nombre de notifications programmées.
  */
 export function syncNotifications(people: Person[], settings: Settings): Promise<number> {
+  if (Platform.OS === 'web') return Promise.resolve(0);
   pending = { people, settings };
   if (!syncing) {
     syncing = (async () => {
@@ -99,7 +129,7 @@ async function doSync(people: Person[], settings: Settings): Promise<number> {
   const { granted } = await Notifications.getPermissionsAsync();
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!granted) return 0;
-  const plan = planNotifications(people, settings);
+  const plan = planNotifications(people, settings, new Date(), MAX);
   for (const n of plan) {
     const data: NotificationData = { personId: n.personId, kind: n.kind };
     await Notifications.scheduleNotificationAsync({
@@ -108,14 +138,10 @@ async function doSync(people: Person[], settings: Settings): Promise<number> {
         title: n.title,
         body: n.body,
         data,
-        categoryIdentifier: n.kind === 'gift' ? CATEGORY_GIFT : CATEGORY_BIRTHDAY,
-        color: n.kind === 'gift' ? '#F2A93B' : '#E8505B',
+        categoryIdentifier: categoryFor(n.kind),
+        color: n.kind === 'gift' ? '#FF8A5B' : '#FF4D6D',
       },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: n.date,
-        channelId: n.kind === 'gift' ? CHANNEL_GIFTS : CHANNEL_BIRTHDAYS,
-      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: n.date, channelId: channelFor(n.kind) },
     });
   }
   return plan.length;
@@ -126,16 +152,13 @@ export async function sendTestNotification(kind: 'birthday' | 'gift'): Promise<v
   const data: NotificationData = { personId: '', kind: 'test' };
   await Notifications.scheduleNotificationAsync({
     content: kind === 'gift'
-      ? { title: '🎁 Cadeau pour Lucas : anniversaire dans 14 jours', body: 'Idées : gourde isotherme, livre de rando · budget 40 €', data, categoryIdentifier: CATEGORY_GIFT }
+      ? { title: '🎁 Cadeau pour Lucas : c’est dans 14 jours', body: 'Idées : gourde isotherme, livre de rando · budget 40 €', data, categoryIdentifier: CATEGORY_GIFT }
       : { title: '🎂 C’est l’anniversaire de Lucas !', body: 'Lucas fête ses 30 ans aujourd’hui. Envoie-lui un petit mot 💌', data, categoryIdentifier: CATEGORY_BIRTHDAY },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 3,
-      channelId: kind === 'gift' ? CHANNEL_GIFTS : CHANNEL_BIRTHDAYS,
-    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3, channelId: kind === 'gift' ? CHANNEL_GIFTS : CHANNEL_BIRTHDAYS },
   });
 }
 
 export async function scheduledCount(): Promise<number> {
+  if (Platform.OS === 'web') return 0;
   return (await Notifications.getAllScheduledNotificationsAsync()).length;
 }

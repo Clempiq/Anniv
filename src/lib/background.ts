@@ -3,6 +3,7 @@
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
+import { autoBackup } from './device';
 import { syncNotifications } from './notifications';
 import { pruneSnoozes } from './planner';
 import { loadData, saveData } from './storage';
@@ -16,6 +17,7 @@ TaskManager.defineTask(RESYNC_TASK, async () => {
     const settings = pruneSnoozes(data.settings);
     if (settings.snoozes.length !== data.settings.snoozes.length) await saveData({ ...data, settings });
     await syncNotifications(data.people, settings);
+    autoBackup({ ...data, settings });
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {
     return BackgroundTask.BackgroundTaskResult.Failed;
