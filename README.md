@@ -1,7 +1,17 @@
 # 🎂 Anniv
 
+> Une application Android pour ne plus jamais oublier un anniversaire, ni le cadeau qui va avec.
+
 Application Android (React Native + Expo) pour noter les anniversaires de ses proches, recevoir des rappels
 **et ne plus jamais oublier d'acheter le cadeau**. Tout reste sur le téléphone : pas de compte, pas de serveur.
+
+## Le problème
+
+Les rappels d'anniversaire des réseaux sociaux ou de l'agenda arrivent le jour même : trop tard pour trouver un cadeau,
+et sans aide pour savoir quoi écrire. On finit par oublier, ou par envoyer un message bâclé.
+
+**Pour qui :** toute personne qui veut être attentionnée avec ses proches sans y penser en permanence, et qui préfère
+que ces données personnelles restent sur son téléphone.
 
 ## Télécharger l'APK
 
@@ -13,11 +23,11 @@ depuis le navigateur si Android le demande. Au premier lancement, aller dans **R
 
 ## Fonctionnalités
 
-**Tableau de bord** — salutation, grand compte à rebours vers le prochain événement (anneau animé, dégradé propre
+**Tableau de bord** : salutation, grand compte à rebours vers le prochain événement (anneau animé, dégradé propre
 à chaque personne), confettis le jour J, « Il n’est pas trop tard » pour les oublis récents, la semaine en cartes,
 cadeaux à préparer, moments spéciaux (fêtes des prénoms, fête des mères/pères/grands-parents, 10 000e jour…).
 
-**Tous les événements** — anniversaires, anniversaires de mariage (avec le nom des noces : coton, étain, or…),
+**Tous les événements** : anniversaires, anniversaires de mariage (avec le nom des noces : coton, étain, or…),
 de couple, souvenirs (ton adapté, sans cadeau), événements libres. Photo ou emoji, lien (Maman, collègue…),
 groupe, favoris, centres d’intérêt, fête du prénom détectée automatiquement, saisie éclair
 (« Julie Martin 12 mars 1990 famille »).
@@ -27,19 +37,29 @@ rappels J-x configurables, rappels cadeau avec boutons « Cadeau acheté » / «
 bouton « C’est fait » sur les rappels d’anniversaire, relance à 20 h si pas encore souhaité, récap du dimanche,
 fêtes des prénoms, fêtes des mères/pères/grands-parents, jalons insolites, et ton propre anniversaire.
 
-**Cadeaux** — idées avec prix et lien, suivi idée → acheté → emballé → offert, budget par personne,
+**Cadeaux** : idées avec prix et lien, suivi idée → acheté → emballé → offert, budget par personne,
 suggestions hors ligne selon les centres d’intérêt, l’âge et le budget, historique « déjà offert ».
 
-**Messages & cartes** — vœux par ton (chaleureux, drôle, poétique, court, pro, romantique, enfant, âge rond,
+**Messages & cartes** : vœux par ton (chaleureux, drôle, poétique, court, pro, romantique, enfant, âge rond,
 en retard), envoi direct par WhatsApp, SMS, e-mail ; cartes de vœux illustrées (8 thèmes, photo possible)
 partagées en image.
 
-**Agenda** — liste (filtres, tris, actions rapides à l’appui long), calendrier mensuel, vue annuelle, recherche plein texte.
+**Agenda** : liste (filtres, tris, actions rapides à l’appui long), calendrier mensuel, vue annuelle, recherche plein texte.
 
-**Moi** — bilan de l’année, série de vœux, 13 badges, statistiques.
+**Moi** : bilan de l’année, série de vœux, 13 badges, statistiques.
 
-**Réglages** — thème clair/sombre, 5 couleurs d’accent, verrou par empreinte/visage, synchronisation avec
+**Réglages** : thème clair/sombre, 5 couleurs d’accent, verrou par empreinte/visage, synchronisation avec
 l’agenda du téléphone, export .ics / CSV / JSON, sauvegardes automatiques hebdomadaires avec restauration.
+
+## Stack
+
+| Catégorie | Technologie |
+|---|---|
+| App | React Native, Expo, Expo Router, TypeScript |
+| Natif | expo-notifications, expo-background-task, expo-contacts, expo-calendar, expo-local-authentication, widget Android |
+| Données | AsyncStorage (local uniquement), export .ics / CSV / JSON |
+| Tests | `node:test` sur la logique pure (dates, rappels, imports), `tsc --noEmit` |
+| CI | GitHub Actions : compilation de l'APK et publication dans les Releases à chaque push |
 
 ## Développement
 
@@ -84,7 +104,19 @@ dans `eas.json` :
 2. `npx eas-cli@latest build --platform android --profile production` : EAS génère et conserve la clé de signature,
    et produit le `.aab`.
 3. Créer l'application dans la [Google Play Console](https://play.google.com/console) (compte développeur : 25 $ une fois),
-   remplir la fiche (description, captures, politique de confidentialité — l'app ne collecte aucune donnée),
+   remplir la fiche (description, captures, politique de confidentialité : l'app ne collecte aucune donnée),
    puis `npx eas-cli@latest submit --platform android` (piste de test interne).
 
 Identifiant de l'application : `com.clempiq.anniv` (définitif une fois publiée ; à changer dans `app.json` avant si besoin).
+
+## Statut
+
+✅ **Application complète et utilisable** via l'APK des Releases. Pas encore publiée sur le Play Store (procédure prête ci-dessus).
+
+## Ce que j'ai appris
+
+- **Partir du moment où l'utilisateur a besoin d'aide** : le vrai besoin n'est pas le rappel du jour J, c'est le rappel cadeau quelques jours avant et le message à envoyer.
+- **Séparer la logique pure de l'interface** (`src/lib/`), ce qui permet de tester dates, rappels et imports sans téléphone.
+- **Gérer les contraintes d'Android** : notifications qui doivent survivre à un redémarrage, tâche de fond, modules natifs incompatibles avec Expo Go.
+- **Respecter la vie privée par conception** : aucun compte, aucun serveur, sauvegardes locales et export à la demande.
+- **Automatiser la livraison** : chaque push produit un APK installable.
